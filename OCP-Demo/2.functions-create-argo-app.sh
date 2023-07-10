@@ -1,5 +1,38 @@
 #!/bin/bash
 
+function private_repo_creds {
+    cat <<EOF | KUBECONFIG=~/.aws/gitops-kubeconfig oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: private-repo-creds
+  namespace: openshift-gitops
+  labels:
+    argocd.argoproj.io/secret-type: repo-creds
+stringData:
+  type: git
+  url: https://github.com/joelapatatechaude
+EOF
+}
+
+function private_repo {
+    REPO_URL=$(git remote get-url origin)
+    REPO_NAME=$(echo $REPO_URL | awk -F '/' '{print $NF}')
+    cat <<EOF | KUBECONFIG=~/.aws/gitops-kubeconfig oc apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: private-repo-$REPO_NAME
+  namespace: openshift-gitops
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  url: $REPO_URL
+  password: $GITHUB_PASSWORD
+  username: $GITHUB_USERNAME
+EOF
+}
+
 function create_argo_cluster {
     LIST=$(argocd cluster list --config ~/.aws/argo-config -o json | jq .[].name -r)
     echo "$LIST" | grep "${ARGO_CLUSTER_NAME}"
