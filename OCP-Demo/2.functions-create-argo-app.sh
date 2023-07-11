@@ -75,12 +75,12 @@ cat <<EOF | KUBECONFIG=~/.aws/gitops-kubeconfig oc apply -f -
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GitWebhook
 metadata:
-  name: webhook-secret
+  name: gitwebhook-github
   namespace: openshift-gitops
 spec:
   gitHub:
     gitServerCredentials:
-      name: $GITHUB_WEBHOOK_PAC
+      name: webhook-secret
   repositoryOwner: joelapatatechaude
   ownerType: user
   repositoryName: $REPO_NAME
