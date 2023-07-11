@@ -67,6 +67,7 @@ function gitwebhook {
     REPO_URL=$(git remote get-url origin)
     REPO_NAME_FULL=$(echo $REPO_URL | awk -F '/' '{print $NF}')
     REPO_NAME=$(basename -s .git $REPO_NAME_FULL)
+    ARGO_SERVER=$(KUBECONFIG=~/.aws/gitops-kubeconfig oc get route openshift-gitops-server -n openshift-gitops -o jsonpath='{.spec.host}')
     echo $REPO_URL
     echo $REPO_NAME
     echo $GITHUB_WEBHOOK_PAC
@@ -84,7 +85,7 @@ spec:
   repositoryOwner: joelapatatechaude
   ownerType: user
   repositoryName: $REPO_NAME
-  webhookURL: $WEBHOOK_URL
+  webhookURL: https://$ARGO_SERVER/api/webhook
   insecureSSL: false
   webhookSecret:
     name: github-pat
