@@ -33,6 +33,37 @@ stringData:
 EOF
 }
 
+function gitwebhook {
+    REPO_URL=$(git remote get-url origin)
+    REPO_NAME=$(echo $REPO_URL | awk -F '/' '{print $NF}')
+    echo $REPO_URL
+    echo $REPO_NAME
+    echo $GITHUB_WEBHOOK_PAC
+    echo "return early"
+    return
+cat <<EOF | KUBECONFIG=~/.aws/gitops-kubeconfig oc apply -f -
+apiVersion: redhatcop.redhat.io/v1alpha1
+kind: GitWebhook
+metadata:
+  name: gitwebhook-github-$REPO_NAME
+spec:
+  gitHub:
+    gitServerCredentials:
+      name: $GITHUB_WEBHOOK_PAC
+  repositoryOwner: joelapatatechaude
+  ownerType: user
+  repositoryName: $REPO_NAME
+  webhookURL: $WEBHOOK_URL
+  insecureSSL: false
+  webhookSecret:
+    name: webhook-secret-$REPO_NAME
+  events:
+    - push
+  contentType: json
+  active: true
+EOF
+}
+
 function create_argo_cluster {
     LIST=$(argocd cluster list --config ~/.aws/argo-config -o json | jq .[].name -r)
     echo "$LIST" | grep "${ARGO_CLUSTER_NAME}"
