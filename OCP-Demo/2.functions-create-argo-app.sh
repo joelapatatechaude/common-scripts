@@ -64,7 +64,7 @@ EOF
 }
 
 function deploy_app {
-    for i in $(ls cluster-go/argo-app/*.yaml); do
+    for i in $(ls ${THEDIR:=cluster-go}/argo-app/*.yaml); do
 	    oc apply -f $i
     done
 }

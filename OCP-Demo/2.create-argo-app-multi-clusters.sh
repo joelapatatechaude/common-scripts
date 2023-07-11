@@ -9,10 +9,13 @@ PROJECT=default
 private_repo_creds
 private_repo
 
-MYDIR=$MYDIR ARGO_CLUSTER_NAME=$ARGO_CLUSTER_NAME create_argo_cluster
-sleep 1
+###
+MYDIR=$MYDIR_1 ARGO_CLUSTER_NAME=$ARGO_CLUSTER_NAME_1 create_argo_cluster
+MYDIR=$MYDIR_2 ARGO_CLUSTER_NAME=$ARGO_CLUSTER_NAME_2 create_argo_cluster
 
 ARGO_CLUSTER_NAME=$ARGO_CLUSTER_NAME KUBECONFIG=~/.aws/gitops-kubeconfig create_app_project
+
 sleep 1
 
-KUBECONFIG=~/.aws/gitops-kubeconfig deploy_app
+KUBECONFIG=~/.aws/gitops-kubeconfig THEDIR=sydney-go deploy_app
+KUBECONFIG=~/.aws/gitops-kubeconfig THEDIR=singapore-go deploy_app
