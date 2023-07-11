@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# need to learn about envsubs
 source ~/.aws/route53
 source ~/.aws/pullsecret
 source ./env.sh

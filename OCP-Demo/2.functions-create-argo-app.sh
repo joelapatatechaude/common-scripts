@@ -17,7 +17,8 @@ EOF
 
 function private_repo {
     REPO_URL=$(git remote get-url origin)
-    REPO_NAME=$(echo $REPO_URL | awk -F '/' '{print $NF}')
+    REPO_NAME_FULL=$(echo $REPO_URL | awk -F '/' '{print $NF}')
+    REPO_NAME=$(basename -s .git $REPO_NAME_FULL)
     cat <<EOF | KUBECONFIG=~/.aws/gitops-kubeconfig oc apply -f -
 apiVersion: v1
 kind: Secret
@@ -33,19 +34,49 @@ stringData:
 EOF
 }
 
+function github_pat_secret {
+    #REPO_URL=$(git remote get-url origin)
+    #REPO_NAME_FULL=$(echo $REPO_URL | awk -F '/' '{print $NF}')
+    #REPO_NAME=$(basename -s .git $REPO_NAME_FULL)
+    TOKEN=$(echo $GITHUB_WEBHOOK_PAC | base64 -w 0)
+    cat <<EOF | KUBECONFIG=~/.aws/gitops-kubeconfig oc apply -f -
+kind: Secret
+apiVersion: v1
+metadata:
+  namespace: openshift-gitops
+  name: github-pat
+stringData:
+  token: ${TOKEN}
+EOF
+}
+
+function gitwebhook_secret {
+    WEBHOOK_SECRET=$(echo $GITHUB_WEBHOOK_SECRET | base64 -w 0)
+    cat <<EOF | KUBECONFIG=~/.aws/gitops-kubeconfig oc apply -f -
+kind: Secret
+apiVersion: v1
+metadata:
+  namespace: openshift-gitops
+  name: webhook-secret
+stringData:
+  secret: ${WEBHOOK_SECRET}
+EOF
+}
+
 function gitwebhook {
     REPO_URL=$(git remote get-url origin)
-    REPO_NAME=$(echo $REPO_URL | awk -F '/' '{print $NF}')
+    REPO_NAME_FULL=$(echo $REPO_URL | awk -F '/' '{print $NF}')
+    REPO_NAME=$(basename -s .git $REPO_NAME_FULL)
     echo $REPO_URL
     echo $REPO_NAME
     echo $GITHUB_WEBHOOK_PAC
-    echo "return early"
-    return
+
 cat <<EOF | KUBECONFIG=~/.aws/gitops-kubeconfig oc apply -f -
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GitWebhook
 metadata:
-  name: gitwebhook-github-$REPO_NAME
+  name: webhook-secret
+  namespace: openshift-gitops
 spec:
   gitHub:
     gitServerCredentials:
@@ -56,7 +87,7 @@ spec:
   webhookURL: $WEBHOOK_URL
   insecureSSL: false
   webhookSecret:
-    name: webhook-secret-$REPO_NAME
+    name: github-pat
   events:
     - push
   contentType: json
