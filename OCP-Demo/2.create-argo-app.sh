@@ -9,6 +9,8 @@ PROJECT=default
 private_repo_creds
 private_repo
 
+manual_webhook
+
 MYDIR=$MYDIR ARGO_CLUSTER_NAME=$ARGO_CLUSTER_NAME create_argo_cluster
 sleep 1
 

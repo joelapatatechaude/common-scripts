@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 function private_repo_creds {
     cat <<EOF | KUBECONFIG=~/.aws/gitops-kubeconfig oc apply -f -
 apiVersion: v1
@@ -35,66 +36,114 @@ EOF
 }
 
 function github_pat_secret {
-    #REPO_URL=$(git remote get-url origin)
-    #REPO_NAME_FULL=$(echo $REPO_URL | awk -F '/' '{print $NF}')
-    #REPO_NAME=$(basename -s .git $REPO_NAME_FULL)
-    TOKEN=$(echo $GITHUB_WEBHOOK_PAC | base64 -w 0)
-    cat <<EOF | KUBECONFIG=~/.aws/gitops-kubeconfig oc apply -f -
+  # no issue here
+  TOKEN=$(echo $GITHUB_WEBHOOK_PAC | base64 -w 0)
+  cat <<EOF | KUBECONFIG=~/.aws/gitops-kubeconfig oc apply -f -
 kind: Secret
 apiVersion: v1
 metadata:
-  namespace: openshift-gitops
+  namespace: gitwebhook-operator
   name: github-pat
-stringData:
-  token: ${TOKEN}
+data:
+  token: $TOKEN
 EOF
 }
 
 function gitwebhook_secret {
-    WEBHOOK_SECRET=$(echo $GITHUB_WEBHOOK_SECRET | base64 -w 0)
-    cat <<EOF | KUBECONFIG=~/.aws/gitops-kubeconfig oc apply -f -
+  # no issue here
+  WEBHOOK_SECRET=$(echo $GITHUB_WEBHOOK_SECRET | base64 -w 0)
+  cat <<EOF | KUBECONFIG=~/.aws/gitops-kubeconfig oc apply -f -
 kind: Secret
 apiVersion: v1
 metadata:
-  namespace: openshift-gitops
+  namespace: gitwebhook-operator
   name: webhook-secret
-stringData:
+data:
   secret: ${WEBHOOK_SECRET}
 EOF
 }
 
 function gitwebhook {
-    REPO_URL=$(git remote get-url origin)
-    REPO_NAME_FULL=$(echo $REPO_URL | awk -F '/' '{print $NF}')
-    REPO_NAME=$(basename -s .git $REPO_NAME_FULL)
-    ARGO_SERVER=$(KUBECONFIG=~/.aws/gitops-kubeconfig oc get route openshift-gitops-server -n openshift-gitops -o jsonpath='{.spec.host}')
-    echo $REPO_URL
-    echo $REPO_NAME
-    echo $GITHUB_WEBHOOK_PAC
+
+  # while the CRD get crated correctly, it feels like the gitwebhook operator project has some bugs which
+  # makes it's pod loopcrash with some null pointer exception.
+  REPO_URL=$(git remote get-url origin)
+  REPO_NAME_FULL=$(echo $REPO_URL | awk -F '/' '{print $NF}')
+  REPO_NAME=$(basename -s .git $REPO_NAME_FULL)
+  ARGO_SERVER=$(KUBECONFIG=~/.aws/gitops-kubeconfig oc get route openshift-gitops-server -n openshift-gitops -o jsonpath='{.spec.host}')
+  OWNER=joelapatatechaude
+
+  echo $REPO_URL
+  echo $REPO_NAME
+  echo $GITHUB_WEBHOOK_PAC
 
 cat <<EOF | KUBECONFIG=~/.aws/gitops-kubeconfig oc apply -f -
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GitWebhook
 metadata:
-  name: gitwebhook-github-test
-  namespace: openshift-gitops
+  name: gitwebhook-github
+  namespace: gitwebhook-operator
 spec:
   gitHub:
     gitServerCredentials:
-      name: webhook-secret
-  repositoryOwner: joelapatatechaude
+      name: github-pat
+  repositoryOwner: $OWNER
   ownerType: user
   repositoryName: $REPO_NAME
   webhookURL: https://$ARGO_SERVER/api/webhook
   insecureSSL: false
   webhookSecret:
-    name: github-pat
+    name: webhook-secret
   events:
     - push
   contentType: json
   active: true
 EOF
 }
+
+function manual_webhook {
+  REPO_URL=$(git remote get-url origin)
+  REPO_NAME_FULL=$(echo $REPO_URL | awk -F '/' '{print $NF}')
+  REPO_NAME=$(basename -s .git $REPO_NAME_FULL)
+  ARGO_SERVER=$(KUBECONFIG=~/.aws/gitops-kubeconfig oc get route openshift-gitops-server -n openshift-gitops -o jsonpath='{.spec.host}')
+  OWNER=joelapatatechaude
+
+  echo $REPO_URL
+  echo $REPO_NAME
+  echo $GITHUB_WEBHOOK_PAC
+  echo $ARGO_SERVER
+  echo $OWNER
+
+  #List existing hook on this repo
+  LIST=$(curl -Ls \
+    -H "Accept: application/vnd.github+json" \
+    -H "Authorization: Bearer $GITHUB_WEBHOOK_PAC"\
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    https://api.github.com/repos/$OWNER/$REPO_NAME/hooks)
+  ID_LIST=$(echo $LIST | jq .[].id -r)
+  echo "$ID_LIST"
+
+  #delete existing hook
+  for HOOK_ID in $(echo $ID_LIST); do
+    curl -L \
+    -X DELETE \
+    -H "Accept: application/vnd.github+json" \
+    -H "Authorization: Bearer $GITHUB_WEBHOOK_PAC"\
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    https://api.github.com/repos/$OWNER/$REPO_NAME/hooks/$HOOK_ID
+  done
+
+  #create my new hook
+  curl -L \
+  -X POST \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer $GITHUB_WEBHOOK_PAC"\
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  https://api.github.com/repos/$OWNER/$REPO_NAME/hooks \
+  -d "{\"name\":\"web\",\"active\":true,\"events\":[\"push\"],\"config\":{\"url\":\"https://$ARGO_SERVER/api/webhook\",\"content_type\":\"json\",\"insecure_ssl\":\"1\", \"secret\": \"$GITHUB_WEBHOOK_SECRET\"}}"
+
+}
+
 
 function create_argo_cluster {
     LIST=$(argocd cluster list --config ~/.aws/argo-config -o json | jq .[].name -r)
