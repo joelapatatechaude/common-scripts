@@ -1,0 +1,3 @@
+#!/bin/sh
+source ./env.sh
+KUBECONFIG=./$MYDIR_2/auth/kubeconfig oc "$@"
