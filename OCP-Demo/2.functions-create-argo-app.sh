@@ -120,9 +120,9 @@ function manual_webhook {
     -H "Authorization: Bearer $GITHUB_WEBHOOK_PAC"\
     -H "X-GitHub-Api-Version: 2022-11-28" \
     https://api.github.com/repos/$OWNER/$REPO_NAME/hooks)
-  echo $LIST
+  #echo $LIST
   ID_LIST=$(echo $LIST | jq .[].id -r)
-  echo "$ID_LIST"
+  #echo "$ID_LIST"
 
   #delete existing hook
   for HOOK_ID in $(echo $ID_LIST); do
