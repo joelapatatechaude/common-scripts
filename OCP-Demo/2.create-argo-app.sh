@@ -2,6 +2,7 @@
 source ~/.aws/route53
 source ./env.sh
 source ~/.aws/github
+source ~/.aws/github-webhook
 source <(curl -s https://raw.githubusercontent.com/joelapatatechaude/common-scripts/main/OCP-Demo/2.functions-create-argo-app.sh)
 CONTEXT=admin
 PROJECT=default
