@@ -17,9 +17,9 @@ MYDIR=$MYDIR_1 ARGO_CLUSTER_NAME=$ARGO_CLUSTER_NAME_1 create_argo_cluster
 MYDIR=$MYDIR_2 ARGO_CLUSTER_NAME=$ARGO_CLUSTER_NAME_2 create_argo_cluster
 sleep 1
 
-ARGO_CLUSTER_NAME=$ARGO_CLUSTER_NAME_1 KUBECONFIG=~/.aws/gitops-kubeconfig create_app_project
-ARGO_CLUSTER_NAME=$ARGO_CLUSTER_NAME_2 KUBECONFIG=~/.aws/gitops-kubeconfig create_app_project
+ARGO_CLUSTER_NAME=$ARGO_CLUSTER_NAME_1 KUBECONFIG=$GITOPS_KUBECONFIG create_app_project
+ARGO_CLUSTER_NAME=$ARGO_CLUSTER_NAME_2 KUBECONFIG=$GITOPS_KUBECONFIG create_app_project
 sleep 1
 
-KUBECONFIG=~/.aws/gitops-kubeconfig THEDIR=sydney-go deploy_app
-KUBECONFIG=~/.aws/gitops-kubeconfig THEDIR=singapore-go deploy_app
+KUBECONFIG=$GITOPS_KUBECONFIG THEDIR=sydney-go deploy_app
+KUBECONFIG=$GITOPS_KUBECONFIG THEDIR=singapore-go deploy_app
