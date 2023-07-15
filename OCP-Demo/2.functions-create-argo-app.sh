@@ -152,7 +152,7 @@ function create_argo_cluster {
     if ! [ $? -eq 0 ]
     then
         echo "Adding the cluster $ARGO_CLUSTER_NAME to argocd"
-        argocd cluster add $CONTEXT --config $ARGO_CONFIG --name $ARGO_CLUSTER_NAME -y --kubeconfig=$MYDIR/auth/kubeconfig
+        argocd cluster add $CONTEXT --config $ARGO_CONFIG --name $ARGO_CLUSTER_NAME -y --kubeconfig=$MYDIR/auth/kubeconfig --insecure
     fi
 }
 
