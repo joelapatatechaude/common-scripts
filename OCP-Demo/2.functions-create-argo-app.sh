@@ -2,7 +2,7 @@
 
 
 function private_repo_creds {
-    cat <<EOF | KUBECONFIG=$GITOPS_KUBECONFIG oc apply -f -
+    cat <<EOF | KUBECONFIG=$HUB_KUBECONFIG oc apply -f -
 apiVersion: v1
 kind: Secret
 metadata:
@@ -20,7 +20,7 @@ function private_repo {
     REPO_URL=$(git remote get-url origin)
     REPO_NAME_FULL=$(echo $REPO_URL | awk -F '/' '{print $NF}')
     REPO_NAME=$(basename -s .git $REPO_NAME_FULL)
-    cat <<EOF | KUBECONFIG=$GITOPS_KUBECONFIG oc apply -f -
+    cat <<EOF | KUBECONFIG=$HUB_KUBECONFIG oc apply -f -
 apiVersion: v1
 kind: Secret
 metadata:
@@ -38,7 +38,7 @@ EOF
 function github_pat_secret {
   # no issue here
   TOKEN=$(echo $GITHUB_WEBHOOK_PAC | base64 -w 0)
-  cat <<EOF | KUBECONFIG=$GITOPS_KUBECONFIG oc apply -f -
+  cat <<EOF | KUBECONFIG=$HUB_KUBECONFIG oc apply -f -
 kind: Secret
 apiVersion: v1
 metadata:
@@ -52,7 +52,7 @@ EOF
 function gitwebhook_secret {
   # no issue here
   WEBHOOK_SECRET=$(echo $GITHUB_WEBHOOK_SECRET | base64 -w 0)
-  cat <<EOF | KUBECONFIG=$GITOPS_KUBECONFIG oc apply -f -
+  cat <<EOF | KUBECONFIG=$HUB_KUBECONFIG oc apply -f -
 kind: Secret
 apiVersion: v1
 metadata:
@@ -70,14 +70,14 @@ function gitwebhook {
   REPO_URL=$(git remote get-url origin)
   REPO_NAME_FULL=$(echo $REPO_URL | awk -F '/' '{print $NF}')
   REPO_NAME=$(basename -s .git $REPO_NAME_FULL)
-  ARGO_SERVER=$(KUBECONFIG=$GITOPS_KUBECONFIG oc get route openshift-gitops-server -n openshift-gitops -o jsonpath='{.spec.host}')
+  ARGO_SERVER=$(KUBECONFIG=$HUB_KUBECONFIG oc get route openshift-gitops-server -n openshift-gitops -o jsonpath='{.spec.host}')
   OWNER=joelapatatechaude
 
   echo $REPO_URL
   echo $REPO_NAME
   echo $GITHUB_WEBHOOK_PAC
 
-cat <<EOF | KUBECONFIG=$GITOPS_KUBECONFIG oc apply -f -
+cat <<EOF | KUBECONFIG=$HUB_KUBECONFIG oc apply -f -
 apiVersion: redhatcop.redhat.io/v1alpha1
 kind: GitWebhook
 metadata:
@@ -105,7 +105,7 @@ function manual_webhook {
   REPO_URL=$(git remote get-url origin)
   REPO_NAME_FULL=$(echo $REPO_URL | awk -F '/' '{print $NF}')
   REPO_NAME=$(basename -s .git $REPO_NAME_FULL)
-  ARGO_SERVER=$(KUBECONFIG=$GITOPS_KUBECONFIG oc get route openshift-gitops-server -n openshift-gitops -o jsonpath='{.spec.host}')
+  ARGO_SERVER=$(KUBECONFIG=$HUB_KUBECONFIG oc get route openshift-gitops-server -n openshift-gitops -o jsonpath='{.spec.host}')
   OWNER=joelapatatechaude
 
   echo $REPO_URL
