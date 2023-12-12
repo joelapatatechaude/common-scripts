@@ -181,3 +181,8 @@ function deploy_app {
 	    oc apply -f $i
     done
 }
+
+#function sealed_secret {
+#    echo "creating sealed secret"
+#    oc create -f ~/.aws/sealed-secret.yaml
+#}
