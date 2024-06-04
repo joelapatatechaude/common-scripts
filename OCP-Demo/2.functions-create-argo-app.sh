@@ -147,13 +147,16 @@ function manual_webhook {
 
 
 function create_argo_cluster {
+    echo "Entering create_argo_cluster function"
     LIST=$(argocd cluster list --insecure --config $ARGO_CONFIG -o json | jq .[].name -r)
+    echo "printing the list"
     echo "$LIST" | grep "${ARGO_CLUSTER_NAME}"
     if ! [ $? -eq 0 ]
     then
         echo "Adding the cluster $ARGO_CLUSTER_NAME to argocd"
         argocd cluster add $CONTEXT --config $ARGO_CONFIG --name $ARGO_CLUSTER_NAME -y --kubeconfig=$MYDIR/auth/kubeconfig --insecure
     fi
+    echo "exiting create_argo_couster"
 }
 
 function create_app_project {
