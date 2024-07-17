@@ -1,7 +1,7 @@
 #!/bin/sh
 
 source ~/.aws/route53
-source ~/.aws/pullsecret
+source ~/.secrets/pullsecret
 source ./env.sh
 source <(curl -s https://raw.githubusercontent.com/joelapatatechaude/common-scripts/main/OCP-Demo/1.functions-create-ocp-clusters.sh)
 
